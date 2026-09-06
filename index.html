@@ -26,7 +26,12 @@
   }
 
   *{box-sizing:border-box}
-  html{-webkit-text-size-adjust:100%}
+  html{
+    -webkit-text-size-adjust:100%;
+    scrollbar-width:none;          /* firefox */
+    -ms-overflow-style:none;       /* old edge */
+  }
+  html::-webkit-scrollbar{display:none}  /* chrome, safari */
 
   body{
     margin:0;
