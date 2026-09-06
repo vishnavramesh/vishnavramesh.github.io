@@ -95,14 +95,19 @@
     z-index:1;
     max-width:1180px;
     margin:0 auto;
-    padding:3.5rem 2rem 6rem;
-    /* soft white veil so the text always reads, fading out at the edges */
-    background:linear-gradient(90deg,
-      rgba(255,255,255,0) 0%,
-      rgba(255,255,255,.72) 7%,
-      rgba(255,255,255,.72) 93%,
-      rgba(255,255,255,0) 100%);
+    padding:0 2rem 6rem;
   }
+
+  /* full-height hero: the bio sits centred, work arrives on scroll */
+  .hero{
+    min-height:100vh;
+    min-height:100svh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+  }
+  .hero .bio{margin:0;max-width:22ch}
 
   /* ---------- the big paragraph ---------- */
 
@@ -239,13 +244,15 @@
 
 <div class="wrap">
 
-  <p class="bio">
-    Vishnav studies biochemistry and computer science at Michigan.
-    He models binding in the
-    <a class="rainbow" href="https://tf7.org/" aria-label="Morrissey lab">Morrissey lab</a>
-    and helps run
-    <a class="rainbow" href="https://www.blueprintsforpangaea.org/" aria-label="Blueprints for Pangaea">Blueprints for Pangaea</a>.
-  </p>
+  <div class="hero">
+    <p class="bio">
+      Vishnav studies biochemistry and computer science at Michigan.
+      He models binding in the
+      <a class="rainbow" href="https://tf7.org/" aria-label="Morrissey lab">Morrissey lab</a>
+      and helps run
+      <a class="rainbow" href="https://www.blueprintsforpangaea.org/" aria-label="Blueprints for Pangaea">Blueprints for Pangaea</a>.
+    </p>
+  </div>
 
   <section>
     <h2>Selected work</h2>
@@ -415,7 +422,7 @@
         t = Math.min((px - left) / fade, (right - px) / fade, 1);
         t = t * t * (3 - 2 * t);
       }
-      calm[cx] = 1 - t * 0.92;   // 8% of full strength behind the column
+      calm[cx] = 1 - t * 0.78;   // 22% of full strength behind the column — clicks still show
     }
 
     // a few opening colonies, one per colour
