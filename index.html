@@ -137,11 +137,19 @@
   .work{list-style:none;margin:0;padding:0}
   .work li{
     display:grid;
-    grid-template-columns:1fr auto;
-    gap:.35rem 2rem;
+    grid-template-columns:auto 1fr auto;
+    gap:.35rem 1.5rem;
     align-items:baseline;
     padding:1rem 0;
     border-bottom:1px solid var(--rule);
+  }
+  .glyph{
+    grid-row:1/3;
+    align-self:start;
+    width:44px;height:44px;
+    margin-top:.4rem;
+    image-rendering:pixelated;
+    image-rendering:crisp-edges;
   }
   .work a{
     font-family:var(--serif);
@@ -153,7 +161,7 @@
   .work a:hover,.work a:focus-visible{text-decoration:underline}
   .work .meta{font-size:.75rem;color:var(--grey);white-space:nowrap}
   .work p{
-    grid-column:1/-1;
+    grid-column:2/-1;
     max-width:58ch;
     margin:.3rem 0 0;
     font-size:.9375rem;
@@ -170,6 +178,27 @@
   .mid-serif{font-family:var(--serif);font-size:clamp(1.5rem,3vw,2.25rem);line-height:1.1}
   .sav{font-family:var(--savate);font-size:clamp(1.6rem,3.4vw,2.5rem);line-height:1.15}
   .arch{font-size:1.0625rem}
+
+  /* ---------- cv ---------- */
+  .cv{list-style:none;margin:0;padding:0}
+  .cv li{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:.1rem 2rem;
+    align-items:baseline;
+    padding:.85rem 0;
+    border-bottom:1px solid var(--rule);
+  }
+  .cv .org{font-size:.9375rem;font-weight:500}
+  .cv .org em{font-style:normal;font-weight:400;color:var(--grey)}
+  .cv .when{font-size:.75rem;color:var(--grey);white-space:nowrap}
+  .cv p{
+    grid-column:1/-1;
+    max-width:58ch;
+    margin:.2rem 0 0;
+    font-size:.875rem;
+    color:var(--grey);
+  }
 
   .prose{max-width:62ch;margin:1.75rem 0 0;color:var(--grey);font-size:.9375rem}
   .prose p{margin:0 0 .9rem}
@@ -192,7 +221,9 @@
 
   @media (max-width:640px){
     .wrap{padding:2.25rem 1.15rem 4rem}
-    .work li{grid-template-columns:1fr}
+    .work li{grid-template-columns:auto 1fr}
+    .glyph{width:36px;height:36px}
+    .cv li{grid-template-columns:1fr}
     .row{flex-direction:column;gap:.25rem}
     .row .lab{width:auto}
   }
@@ -231,19 +262,65 @@
     <h2>Selected work</h2>
     <ul class="work">
       <li>
+        <canvas class="glyph" data-pattern="rpentomino" data-color="0" aria-hidden="true"></canvas>
         <a href="#">Polyphosphate binding thermodynamics</a>
-        <span class="meta">ITC, 2026</span>
-        <p>Why the single-site model returns a stoichiometry that cannot be right, and what McGhee–von Hippel does about it.</p>
+        <span class="meta">ITC · Morrissey Lab, 2026</span>
+        <p>Why the single-site model returns a stoichiometry that cannot be right, and what McGhee–von Hippel does about it. A probabilistic lattice-binding model in NumPy/SciPy, presented at the Frankel Cardiovascular Center conference.</p>
       </li>
       <li>
+        <canvas class="glyph" data-pattern="glider" data-color="2" aria-hidden="true"></canvas>
+        <a href="#">Prima — longitudinal disease progression</a>
+        <span class="meta">PyTorch · MLNeurosurg Lab, 2026</span>
+        <p>Extending a brain-MRI vision–language model to reason about change across sequential patient scans: custom dataset, architecture, training pipeline, and memory-mapped checkpoint loading for the big weights.</p>
+      </li>
+      <li>
+        <canvas class="glyph" data-pattern="pulsar" data-color="4" aria-hidden="true"></canvas>
         <a href="#">ECG classification on PTB-XL</a>
         <span class="meta">PyTorch, 2026</span>
         <p>A residual 1D CNN over 12-lead recordings. Mostly a writeup about patient-aware splitting and the four points of AUROC you gain by doing it wrong.</p>
       </li>
       <li>
+        <canvas class="glyph" data-pattern="lwss" data-color="1" aria-hidden="true"></canvas>
+        <a href="#">Blueprints Supply Desk</a>
+        <span class="meta">FastAPI + React, 2026</span>
+        <p>A supply-request portal for Blueprints for Pangaea's partner organisations — shipment logging synced to a live spreadsheet, automatic status emails, and a metrics dashboard that cut inventory costs.</p>
+      </li>
+      <li>
+        <canvas class="glyph" data-pattern="beacon" data-color="3" aria-hidden="true"></canvas>
         <a href="#">Coagulation cascade model</a>
         <span class="meta">In progress</span>
         <p>Bench-measured constants fed into a kinetic model. The disagreements are the interesting part.</p>
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Curriculum vitae</h2>
+    <ul class="cv">
+      <li>
+        <span class="org">University of Michigan <em>— B.S., computer science &amp; biochemistry</em></span>
+        <span class="when">2024 – 2028</span>
+        <p>4.0 GPA. USNCO national finalist ×3, Branstrom Freshman Award, National Merit finalist.</p>
+      </li>
+      <li>
+        <span class="org">Frankel Cardiovascular Center <em>— SURF fellow, Morrissey Lab</em></span>
+        <span class="when">Summer 2026</span>
+        <p>Computational models of anti-stroke drug binding to polyphosphate and other polymer-like coagulants; challenged the single-site literature with an entropic binding model.</p>
+      </li>
+      <li>
+        <span class="org">Blueprints for Pangaea <em>— technology &amp; financial lead</em></span>
+        <span class="when">2026 – present</span>
+        <p>Moving surplus medical supplies to where they are needed: multi-ton shipments, twelve sister chapters, and the software that keeps the inventory honest.</p>
+      </li>
+      <li>
+        <span class="org">Atlas Consulting Group <em>— tech lead</em></span>
+        <span class="when">2026 – present</span>
+        <p>Market and pricing analysis for a higher-ed SaaS platform with 850k+ users.</p>
+      </li>
+      <li>
+        <span class="org">Elsewhere</span>
+        <span class="when">ongoing</span>
+        <p>C++, Python, JavaScript, SQL, Go, Rust. Chess at 1600, V4 boulders, ham radio, and an unreasonably curated restaurant log.</p>
       </li>
     </ul>
   </section>
@@ -265,7 +342,8 @@
         in the corner takes any rule in <code>B&hellip;/S&hellip;</code>
         notation — try <code>rule B36/S23</code> (HighLife) or
         <code>rule B3/S12345</code> (Maze) — plus <code>random</code>,
-        <code>clear</code>, <code>speed</code> and <code>help</code>.
+        <code>clear</code>, <code>speed</code>, <code>off</code> if it is
+        all too much, and <code>help</code>.
       </p>
       <p>
         <strong>Two things it respects.</strong> The loop pauses when the
@@ -295,7 +373,9 @@
 
   <footer>
     Instrument Serif, Savate and Archivo, all free. Say hello —
-    <a href="#">vishnav@umich.edu</a>
+    <a href="mailto:vishnavr@umich.edu">vishnavr@umich.edu</a> ·
+    <a href="https://github.com/VishnavRamesh">GitHub</a> ·
+    <a href="https://linkedin.com/in/vishnavramesh">LinkedIn</a>
   </footer>
 
 </div>
@@ -346,7 +426,7 @@
   var grid, next, col, colNext, heat;   // heat = fading trail intensity
   var off, octx, img, data;
   var colorIdx = 0, lastCycle = 0, pointerDown = false;
-  var running = false, paused = false, raf = 0, lastGen = 0, lastAmbient = 0;
+  var running = false, paused = false, bgOn = true, raf = 0, lastGen = 0, lastAmbient = 0;
 
   function alloc() {
     var w = window.innerWidth, h = window.innerHeight;
@@ -467,7 +547,7 @@
   }
 
   function start() {
-    if (running || reduce) return;
+    if (running || reduce || !bgOn) return;
     running = true; raf = requestAnimationFrame(loop);
   }
   function stop() { running = false; cancelAnimationFrame(raf); }
@@ -479,7 +559,7 @@
 
   // ---------- pointer interaction ----------
   window.addEventListener('pointermove', function (e) {
-    if (reduce) return;
+    if (reduce || !bgOn) return;
     var now = performance.now();
     if (pointerDown && now - lastCycle > 1800) {
       colorIdx = (colorIdx + 1) % PALETTE.length; lastCycle = now;
@@ -562,12 +642,40 @@
     log('> ' + input, 'in');
 
     if (cmd === 'help') {
+      log('about         what is this background?');
       log('rule B3/S23   set birth/survival counts');
       log('rule highlife named: ' + Object.keys(KNOWN).slice(0, 8).join(', ') + ', …');
       log('random [0-1]  fill grid at density (default .3)');
       log('clear         wipe the grid');
       log('pause / play  freeze / resume');
       log('speed [ms]    per generation, e.g. speed 40');
+      log('off / on      background away / back');
+      return;
+    }
+    if (cmd === 'about' || cmd === 'info') {
+      log('conway’s game of life (1970): each cell looks at its');
+      log('eight neighbours. dead + exactly 3 alive → born; alive');
+      log('with 2 or 3 → survives; otherwise it dies. B3/S23.');
+      log('that rule alone gives gliders, guns, and a computer.');
+      log('move your pointer to sow cells — newborns inherit their');
+      log('parents’ colour, so colonies keep their palette shade.');
+      log('try: rule highlife · rule maze · random .4 · speed 40');
+      return;
+    }
+    if (cmd === 'off') {
+      bgOn = false; stop();
+      clearGrid();
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      log('background off — type on to bring it back', 'ok');
+      return;
+    }
+    if (cmd === 'on') {
+      if (!bgOn) {
+        bgOn = true;
+        for (var si = 0; si < 6; si++) seed(Math.random() * W, Math.random() * H, 5, si % PALETTE.length, 0.55);
+        if (reduce) still(); else start();
+      }
+      log('background on', 'ok');
       return;
     }
     if (cmd === 'rule') {
@@ -608,11 +716,99 @@
     if (e.key === 'Enter') { run(tin.value); tin.value = ''; }
   });
   tbar.addEventListener('click', function () { term.classList.toggle('min'); });
-  log('conway’s game of life — type help');
+  log('conway’s game of life — type about, or help for commands');
 
   lastW = window.innerWidth; lastH = window.innerHeight;
   alloc();
   if (reduce) still(); else start();
+})();
+</script>
+
+<script>
+/* project glyphs: each work item gets its own little Life, B3/S23 on a torus */
+(function () {
+  var PALETTE = ['#C7503A', '#4A8B5F', '#5B6FB8', '#C9932E', '#C4767E'];
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // pulsar built from its symmetry rather than typed out
+  var pulsar = [];
+  [2, 3, 4, 8, 9, 10].forEach(function (a) {
+    [0, 5, 7, 12].forEach(function (b) { pulsar.push([a, b], [b, a]); });
+  });
+
+  var PATTERNS = {
+    glider:     { size: 12, cells: [[1,0],[2,1],[0,2],[1,2],[2,2]] },
+    lwss:       { size: 14, cells: [[1,0],[4,0],[0,1],[0,2],[4,2],[0,3],[1,3],[2,3],[3,3]] },
+    pulsar:     { size: 17, cells: pulsar, offset: 2 },
+    rpentomino: { size: 18, cells: [[1,0],[2,0],[0,1],[1,1],[1,2]], reset: 70 },
+    beacon:     { size: 8,  cells: [[0,0],[1,0],[0,1],[3,2],[2,3],[3,3]], offset: 2 }
+  };
+
+  var glyphs = [];
+
+  document.querySelectorAll('canvas.glyph').forEach(function (cv) {
+    var spec = PATTERNS[cv.dataset.pattern];
+    if (!spec) return;
+    var S = spec.size;
+    cv.width = S; cv.height = S;
+    var g = {
+      ctx: cv.getContext('2d'),
+      S: S,
+      grid: new Uint8Array(S * S),
+      next: new Uint8Array(S * S),
+      color: PALETTE[+cv.dataset.color || 0],
+      spec: spec,
+      gen: 0
+    };
+    plant(g);
+    draw(g);
+    glyphs.push(g);
+  });
+
+  function plant(g) {
+    g.grid.fill(0);
+    var off = g.spec.offset || Math.floor((g.S - 5) / 2);
+    g.spec.cells.forEach(function (c) {
+      g.grid[(c[1] + off) * g.S + (c[0] + off)] = 1;
+    });
+    g.gen = 0;
+  }
+
+  function step(g) {
+    var S = g.S, grid = g.grid, next = g.next;
+    for (var y = 0; y < S; y++) {
+      for (var x = 0; x < S; x++) {
+        var xm = (x + S - 1) % S, xp = (x + 1) % S;
+        var ym = (y + S - 1) % S, yp = (y + 1) % S;
+        var n = grid[ym * S + xm] + grid[ym * S + x] + grid[ym * S + xp]
+              + grid[y  * S + xm]                    + grid[y  * S + xp]
+              + grid[yp * S + xm] + grid[yp * S + x] + grid[yp * S + xp];
+        var i = y * S + x;
+        next[i] = grid[i] ? (n === 2 || n === 3 ? 1 : 0) : (n === 3 ? 1 : 0);
+      }
+    }
+    g.next = grid; g.grid = next;
+    g.gen++;
+    if (g.spec.reset && g.gen >= g.spec.reset) plant(g);
+  }
+
+  function draw(g) {
+    var S = g.S;
+    g.ctx.clearRect(0, 0, S, S);
+    g.ctx.fillStyle = g.color;
+    for (var y = 0; y < S; y++) {
+      for (var x = 0; x < S; x++) {
+        if (g.grid[y * S + x]) g.ctx.fillRect(x, y, 1, 1);
+      }
+    }
+  }
+
+  if (!reduce && glyphs.length) {
+    setInterval(function () {
+      if (document.hidden) return;
+      glyphs.forEach(function (g) { step(g); draw(g); });
+    }, 420);
+  }
 })();
 </script>
 </body>
