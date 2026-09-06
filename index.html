@@ -38,8 +38,8 @@
     -webkit-font-smoothing:antialiased;
   }
 
-  /* reaction–diffusion layer */
-  #rd{
+  /* game-of-life layer */
+  #life{
     position:fixed;
     inset:0;
     width:100%;
@@ -47,6 +47,43 @@
     z-index:0;
     pointer-events:none;
     display:block;
+  }
+
+  /* ---------- rule terminal ---------- */
+  #term{
+    position:fixed;
+    right:1rem;
+    bottom:1rem;
+    z-index:2;
+    width:min(21rem,calc(100vw - 2rem));
+    background:rgba(255,255,255,.94);
+    border:1px solid var(--black);
+    font-family:ui-monospace,Menlo,Consolas,monospace;
+    font-size:.75rem;
+    line-height:1.5;
+  }
+  #term .tbar{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:.3rem .6rem;
+    border-bottom:1px solid var(--rule);
+    color:var(--grey);
+    cursor:pointer;
+    user-select:none;
+  }
+  #term .tbar b{font-weight:500;color:var(--black)}
+  #term .tbody{padding:.5rem .6rem .6rem}
+  #term.min .tbody{display:none}
+  #tlog{margin:0 0 .35rem;max-height:9rem;overflow-y:auto;white-space:pre-wrap;word-break:break-word}
+  #tlog .in{color:var(--grey)}
+  #tlog .err{color:var(--c1)}
+  #tlog .ok{color:var(--c2)}
+  #term .tline{display:flex;gap:.4rem;align-items:baseline}
+  #term .tline .ps{color:var(--c3);flex:none}
+  #tin{
+    flex:1;min-width:0;
+    border:0;outline:0;background:transparent;
+    font:inherit;color:var(--black);
+    padding:0;
   }
 
   .wrap{
@@ -163,7 +200,19 @@
 </head>
 <body>
 
-<canvas id="rd" aria-hidden="true"></canvas>
+<canvas id="life" aria-hidden="true"></canvas>
+
+<div id="term" role="group" aria-label="Game of Life rule terminal">
+  <div class="tbar" id="tbar" title="collapse / expand"><b>life</b><span id="trule">B3/S23</span></div>
+  <div class="tbody">
+    <div id="tlog" aria-live="polite"></div>
+    <div class="tline">
+      <span class="ps">&gt;</span>
+      <input id="tin" type="text" autocomplete="off" spellcheck="false"
+             aria-label="Enter a rule, e.g. B3/S23, or type help" placeholder="rule B36/S23 · help">
+    </div>
+  </div>
+</div>
 
 <div class="wrap">
 
@@ -203,26 +252,25 @@
     <h2>The background</h2>
     <div class="prose">
       <p>
-        Gray–Scott reaction–diffusion: two chemicals, <em>u</em> and <em>v</em>.
-        <em>u</em> is fed in at rate <code>f</code>, <em>v</em> is removed at rate
-        <code>k</code>, and <em>v</em> catalyses its own production by consuming
-        <em>u</em>. Because <em>u</em> diffuses twice as fast as <em>v</em>,
-        the activator is trapped locally while the inhibitor spreads. That
-        asymmetry is the whole of Turing's 1952 argument, and it is
-        sufficient to produce the patterns you see.
+        Conway's Game of Life: a grid of cells, each alive or dead. A dead
+        cell with exactly three live neighbours is born; a live cell with
+        two or three survives; everything else dies. That is the whole rule,
+        written <code>B3/S23</code>, and it is sufficient for gliders, guns,
+        and — famously — universal computation.
       </p>
       <p>
-        Move the pointer to seed <em>v</em>. Each press cycles to the next
-        palette colour, and a long stroke cycles on its own every couple of
-        seconds. Colour is stored as a third field that diffuses with the
-        pattern, so a brick seed grows a brick colony and mixes only at the
-        borders with a neighbour.
+        Move the pointer to sow live cells. A newborn cell inherits the
+        colour of its parents, so each seed grows a colony in its own
+        palette colour and they argue at the borders. The little terminal
+        in the corner takes any rule in <code>B&hellip;/S&hellip;</code>
+        notation — try <code>rule B36/S23</code> (HighLife) or
+        <code>rule B3/S12345</code> (Maze) — plus <code>random</code>,
+        <code>clear</code>, <code>speed</code> and <code>help</code>.
       </p>
       <p>
-        <strong>Two things it respects.</strong> The loop pauses when the tab
-        is hidden, and under <code>prefers-reduced-motion</code> it computes
-        a few hundred steps once and renders a still. Parameters here are
-        <code>f = 0.0545, k = 0.062</code>, the coral regime.
+        <strong>Two things it respects.</strong> The loop pauses when the
+        tab is hidden, and under <code>prefers-reduced-motion</code> it runs
+        a few hundred generations once and renders a still.
       </p>
     </div>
   </section>
@@ -271,7 +319,7 @@
 
 <script>
 (function () {
-  var canvas = document.getElementById('rd');
+  var canvas = document.getElementById('life');
   var ctx = canvas.getContext('2d', { alpha: false });
 
   var PALETTE = [
@@ -282,32 +330,33 @@
     [196, 118, 126]  // rose
   ];
 
-  // Gray–Scott constants (Pearson): u diffuses at 1, v at 0.5
-  var Du = 1.0, Dv = 0.5, F = 0.0545, K = 0.062;
-
-  var STRENGTH = 0.78;       // how far from white a fully-developed cell goes
-  var STEPS_PER_FRAME = 5;
-  var TARGET_CELLS = 52000;  // caps CPU on big screens
-  var COLOR_DIFFUSION = 0.06;
+  var STRENGTH = 0.72;      // how far from white a live cell goes
+  var FADE = 0.90;          // trail decay per generation
+  var TARGET_CELLS = 26000; // caps CPU on big screens
+  var GEN_MS = 90;          // ms per generation (speed command changes this)
 
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  // rule as bitmasks over neighbour counts 0–8
+  var birth = 0, survive = 0, ruleName = 'B3/S23';
+  function setRule(b, s, name) { birth = b; survive = s; ruleName = name; }
+  setRule(1 << 3, (1 << 2) | (1 << 3), 'B3/S23');
+
   var W, H, N, cell;
-  var u, v, u2, v2, cr, cg, cb, cr2, cg2, cb2;
+  var grid, next, col, colNext, heat;   // heat = fading trail intensity
   var off, octx, img, data;
   var colorIdx = 0, lastCycle = 0, pointerDown = false;
-  var running = false, raf = 0;
+  var running = false, paused = false, raf = 0, lastGen = 0, lastAmbient = 0;
 
   function alloc() {
     var w = window.innerWidth, h = window.innerHeight;
-    cell = Math.max(5, Math.ceil(Math.sqrt((w * h) / TARGET_CELLS)));
+    cell = Math.max(7, Math.ceil(Math.sqrt((w * h) / TARGET_CELLS)));
     W = Math.ceil(w / cell); H = Math.ceil(h / cell); N = W * H;
     canvas.width = w; canvas.height = h;
 
-    u = new Float32Array(N).fill(1); v = new Float32Array(N);
-    u2 = new Float32Array(N); v2 = new Float32Array(N);
-    cr = new Float32Array(N).fill(255); cg = new Float32Array(N).fill(255); cb = new Float32Array(N).fill(255);
-    cr2 = new Float32Array(N); cg2 = new Float32Array(N); cb2 = new Float32Array(N);
+    grid = new Uint8Array(N); next = new Uint8Array(N);
+    col = new Uint8Array(N); colNext = new Uint8Array(N);
+    heat = new Float32Array(N);
 
     off = document.createElement('canvas'); off.width = W; off.height = H;
     octx = off.getContext('2d');
@@ -315,87 +364,105 @@
 
     // a few opening colonies, one per colour
     for (var i = 0; i < 6; i++) {
-      seed(Math.random() * W, Math.random() * H, 3, PALETTE[i % PALETTE.length]);
+      seed(Math.random() * W, Math.random() * H, 5, i % PALETTE.length, 0.55);
     }
   }
 
-  function seed(cx, cy, r, col) {
+  function seed(cx, cy, r, ci, density) {
     var r2 = r * r;
     var x0 = Math.max(1, Math.floor(cx - r)), x1 = Math.min(W - 2, Math.ceil(cx + r));
     var y0 = Math.max(1, Math.floor(cy - r)), y1 = Math.min(H - 2, Math.ceil(cy + r));
     for (var y = y0; y <= y1; y++) {
       for (var x = x0; x <= x1; x++) {
         var dx = x - cx, dy = y - cy;
-        if (dx * dx + dy * dy <= r2) {
+        if (dx * dx + dy * dy <= r2 && Math.random() < density) {
           var i = y * W + x;
-          v[i] = 1; u[i] = 0.5;
-          cr[i] = col[0]; cg[i] = col[1]; cb[i] = col[2];
+          grid[i] = 1; col[i] = ci; heat[i] = 1;
         }
       }
     }
   }
 
-  function step(diffuseColor) {
-    var x, y, i, lu, lv, uvv;
+  function randomize(density) {
+    for (var i = 0; i < N; i++) {
+      if (Math.random() < density) {
+        grid[i] = 1; col[i] = (Math.random() * PALETTE.length) | 0; heat[i] = 1;
+      } else {
+        grid[i] = 0;
+      }
+    }
+  }
+
+  function clearGrid() {
+    grid.fill(0); heat.fill(0);
+  }
+
+  function step() {
+    var x, y, i, n;
     for (y = 1; y < H - 1; y++) {
       for (x = 1; x < W - 1; x++) {
         i = y * W + x;
-        lu = -u[i]
-           + 0.2  * (u[i - 1] + u[i + 1] + u[i - W] + u[i + W])
-           + 0.05 * (u[i - W - 1] + u[i - W + 1] + u[i + W - 1] + u[i + W + 1]);
-        lv = -v[i]
-           + 0.2  * (v[i - 1] + v[i + 1] + v[i - W] + v[i + W])
-           + 0.05 * (v[i - W - 1] + v[i - W + 1] + v[i + W - 1] + v[i + W + 1]);
-        uvv = u[i] * v[i] * v[i];
-        var nu = u[i] + Du * lu - uvv + F * (1 - u[i]);
-        var nv = v[i] + Dv * lv + uvv - (K + F) * v[i];
-        u2[i] = nu < 0 ? 0 : nu > 1 ? 1 : nu;
-        v2[i] = nv < 0 ? 0 : nv > 1 ? 1 : nv;
+        n = grid[i - 1] + grid[i + 1] + grid[i - W] + grid[i + W]
+          + grid[i - W - 1] + grid[i - W + 1] + grid[i + W - 1] + grid[i + W + 1];
 
-        if (diffuseColor) {
-          cr2[i] = cr[i] + COLOR_DIFFUSION * (-cr[i] + 0.25 * (cr[i - 1] + cr[i + 1] + cr[i - W] + cr[i + W]));
-          cg2[i] = cg[i] + COLOR_DIFFUSION * (-cg[i] + 0.25 * (cg[i - 1] + cg[i + 1] + cg[i - W] + cg[i + W]));
-          cb2[i] = cb[i] + COLOR_DIFFUSION * (-cb[i] + 0.25 * (cb[i - 1] + cb[i + 1] + cb[i - W] + cb[i + W]));
+        if (grid[i]) {
+          next[i] = (survive >> n) & 1;
+          colNext[i] = col[i];
+        } else if ((birth >> n) & 1) {
+          next[i] = 1;
+          // newborn inherits a live neighbour's colour (first found, rotating start)
+          var c = col[i];
+          if (grid[i - 1]) c = col[i - 1];
+          else if (grid[i + 1]) c = col[i + 1];
+          else if (grid[i - W]) c = col[i - W];
+          else if (grid[i + W]) c = col[i + W];
+          else if (grid[i - W - 1]) c = col[i - W - 1];
+          else if (grid[i - W + 1]) c = col[i - W + 1];
+          else if (grid[i + W - 1]) c = col[i + W - 1];
+          else if (grid[i + W + 1]) c = col[i + W + 1];
+          colNext[i] = c;
+        } else {
+          next[i] = 0;
+          colNext[i] = col[i];
         }
       }
     }
     var t;
-    t = u; u = u2; u2 = t;
-    t = v; v = v2; v2 = t;
-    if (diffuseColor) {
-      t = cr; cr = cr2; cr2 = t;
-      t = cg; cg = cg2; cg2 = t;
-      t = cb; cb = cb2; cb2 = t;
-    }
+    t = grid; grid = next; next = t;
+    t = col; col = colNext; colNext = t;
+    for (var k = 0; k < N; k++) heat[k] = grid[k] ? 1 : heat[k] * FADE;
   }
 
   function render() {
     for (var i = 0, p = 0; i < N; i++, p += 4) {
-      var s = (v[i] - 0.12) / 0.20;
-      s = s < 0 ? 0 : s > 1 ? 1 : s;
-      s = s * s * (3 - 2 * s) * STRENGTH;
-      data[p]     = 255 + (cr[i] - 255) * s;
-      data[p + 1] = 255 + (cg[i] - 255) * s;
-      data[p + 2] = 255 + (cb[i] - 255) * s;
+      var s = heat[i];
+      s = (s < 0.04 ? 0 : s) * STRENGTH;
+      var c = PALETTE[col[i]];
+      data[p]     = 255 + (c[0] - 255) * s;
+      data[p + 1] = 255 + (c[1] - 255) * s;
+      data[p + 2] = 255 + (c[2] - 255) * s;
       data[p + 3] = 255;
     }
     octx.putImageData(img, 0, 0);
-    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingEnabled = false;
     ctx.drawImage(off, 0, 0, canvas.width, canvas.height);
   }
 
-  var frame = 0, lastAmbient = 0;
   function loop(now) {
     if (!running) return;
-    for (var s = 0; s < STEPS_PER_FRAME; s++) step((frame++ & 3) === 0);
-
-    // keep it alive when nobody is touching it
-    if (now - lastAmbient > 5000) {
-      lastAmbient = now;
-      seed(Math.random() * W, Math.random() * H, 2.5, PALETTE[colorIdx]);
-      colorIdx = (colorIdx + 1) % PALETTE.length;
+    if (now - lastGen >= GEN_MS) {
+      lastGen = now;
+      if (!paused) {
+        step();
+        // keep it alive when nobody is touching it
+        if (now - lastAmbient > 7000) {
+          lastAmbient = now;
+          seed(Math.random() * W, Math.random() * H, 4, colorIdx, 0.55);
+          colorIdx = (colorIdx + 1) % PALETTE.length;
+        }
+      }
+      render();
     }
-    render();
     raf = requestAnimationFrame(loop);
   }
 
@@ -405,22 +472,23 @@
   }
   function stop() { running = false; cancelAnimationFrame(raf); }
 
-  // ---------- interaction ----------
-  function pointerToCell(e) {
-    return { x: e.clientX / cell, y: e.clientY / cell };
+  function still() {
+    for (var i = 0; i < 300; i++) step();
+    render();
   }
+
+  // ---------- pointer interaction ----------
   window.addEventListener('pointermove', function (e) {
     if (reduce) return;
     var now = performance.now();
     if (pointerDown && now - lastCycle > 1800) {
       colorIdx = (colorIdx + 1) % PALETTE.length; lastCycle = now;
     }
-    var c = pointerToCell(e);
-    seed(c.x, c.y, pointerDown ? 3.2 : 2.2, PALETTE[colorIdx]);
+    seed(e.clientX / cell, e.clientY / cell, pointerDown ? 3.5 : 2.2, colorIdx, 0.5);
   }, { passive: true });
 
-  window.addEventListener('pointerdown', function () {
-    if (reduce) return;
+  window.addEventListener('pointerdown', function (e) {
+    if (reduce || e.target.closest && e.target.closest('#term')) return;
     pointerDown = true;
     colorIdx = (colorIdx + 1) % PALETTE.length;
     lastCycle = performance.now();
@@ -445,10 +513,102 @@
     }, 150);
   });
 
-  function still() {
-    for (var i = 0; i < 700; i++) step((i & 3) === 0);
-    render();
+  // ---------- terminal ----------
+  var term = document.getElementById('term');
+  var tbar = document.getElementById('tbar');
+  var tlog = document.getElementById('tlog');
+  var tin = document.getElementById('tin');
+  var trule = document.getElementById('trule');
+
+  function log(msg, cls) {
+    var d = document.createElement('div');
+    if (cls) d.className = cls;
+    d.textContent = msg;
+    tlog.appendChild(d);
+    while (tlog.children.length > 40) tlog.removeChild(tlog.firstChild);
+    tlog.scrollTop = tlog.scrollHeight;
   }
+
+  // accepts "B3/S23", "b36/s23", "3/23" (S/B Life-style), or bare "B2/S"
+  function parseRule(str) {
+    var m = /^b(\d*)\/s(\d*)$/i.exec(str) ;
+    var bs, ss;
+    if (m) { bs = m[1]; ss = m[2]; }
+    else {
+      m = /^(\d*)\/(\d*)$/.exec(str); // survival/birth shorthand, e.g. 23/3
+      if (!m) return null;
+      ss = m[1]; bs = m[2];
+    }
+    if (!bs && !ss) return null;
+    var b = 0, s = 0, i;
+    for (i = 0; i < bs.length; i++) b |= 1 << +bs[i];
+    for (i = 0; i < ss.length; i++) s |= 1 << +ss[i];
+    if (b & 1) return null; // B0 would flood instantly; politely refuse
+    return { b: b, s: s, name: 'B' + bs + '/S' + ss.toUpperCase() };
+  }
+
+  var KNOWN = {
+    life: 'B3/S23', conway: 'B3/S23', highlife: 'B36/S23',
+    seeds: 'B2/S', maze: 'B3/S12345', mazectric: 'B3/S1234',
+    daynight: 'B3678/S34678', 'day&night': 'B3678/S34678',
+    coral: 'B3/S45678', anneal: 'B4678/S35678', diamoeba: 'B35678/S5678',
+    '2x2': 'B36/S125', move: 'B368/S245', stains: 'B3678/S235678'
+  };
+
+  function run(input) {
+    var parts = input.trim().split(/\s+/);
+    var cmd = (parts[0] || '').toLowerCase();
+    if (!cmd) return;
+    log('> ' + input, 'in');
+
+    if (cmd === 'help') {
+      log('rule B3/S23   set birth/survival counts');
+      log('rule highlife named: ' + Object.keys(KNOWN).slice(0, 8).join(', ') + ', …');
+      log('random [0-1]  fill grid at density (default .3)');
+      log('clear         wipe the grid');
+      log('pause / play  freeze / resume');
+      log('speed [ms]    per generation, e.g. speed 40');
+      return;
+    }
+    if (cmd === 'rule') {
+      var arg = (parts[1] || '').toLowerCase();
+      var spec = KNOWN[arg] || parts[1] || '';
+      var r = parseRule(spec);
+      if (!r) { log('cannot parse "' + (parts[1] || '') + '" — try B3/S23 (no B0)', 'err'); return; }
+      setRule(r.b, r.s, r.name);
+      trule.textContent = ruleName;
+      log('rule set to ' + ruleName + (KNOWN[arg] ? ' (' + arg + ')' : ''), 'ok');
+      if (reduce) still();
+      return;
+    }
+    // bare rulestring works too: "B36/S23"
+    var direct = parseRule(cmd);
+    if (direct) { run('rule ' + cmd); tlog.removeChild(tlog.lastChild.previousSibling); return; }
+
+    if (cmd === 'random') {
+      var d = Math.min(0.9, Math.max(0.01, parseFloat(parts[1]) || 0.3));
+      randomize(d);
+      log('randomised at ' + d, 'ok');
+      if (reduce) { render(); }
+      return;
+    }
+    if (cmd === 'clear') { clearGrid(); render(); log('cleared', 'ok'); return; }
+    if (cmd === 'pause') { paused = true; log('paused — the pointer still sows', 'ok'); return; }
+    if (cmd === 'play' || cmd === 'resume') { paused = false; log('running', 'ok'); return; }
+    if (cmd === 'speed') {
+      var ms = Math.min(1000, Math.max(16, parseInt(parts[1], 10) || 90));
+      GEN_MS = ms;
+      log(ms + ' ms per generation', 'ok');
+      return;
+    }
+    log('unknown: ' + cmd + ' — try help', 'err');
+  }
+
+  tin.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { run(tin.value); tin.value = ''; }
+  });
+  tbar.addEventListener('click', function () { term.classList.toggle('min'); });
+  log('conway’s game of life — type help');
 
   lastW = window.innerWidth; lastH = window.innerHeight;
   alloc();
