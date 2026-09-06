@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vishnav — type study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Archivo:wght@400;500;600&family=Savate:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --white:#FFFFFF;
+    --black:#000000;
+    --grey:#555555;
+    --rule:#DADADA;
+
+    --c1:#C7503A;
+    --c2:#4A8B5F;
+    --c3:#5B6FB8;
+    --c4:#C9932E;
+    --c5:#C4767E;
+
+    --serif:"Instrument Serif",Georgia,serif;
+    --sans:"Archivo",Helvetica,Arial,sans-serif;
+    --savate:"Savate",Georgia,serif;
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+
+  body{
+    margin:0;
+    background:var(--white);
+    color:var(--black);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* reaction–diffusion layer */
+  #rd{
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    z-index:0;
+    pointer-events:none;
+    display:block;
+  }
+
+  .wrap{
+    position:relative;
+    z-index:1;
+    max-width:1180px;
+    margin:0 auto;
+    padding:3.5rem 2rem 6rem;
+  }
+
+  /* ---------- the big paragraph ---------- */
+
+  .bio{
+    font-family:var(--serif);
+    font-weight:400;
+    font-size:clamp(2.4rem,7.2vw,6rem);
+    line-height:1.02;
+    letter-spacing:-0.005em;
+    margin:0 0 5rem;
+    text-wrap:pretty;
+  }
+
+  .rainbow{
+    text-decoration:underline;
+    text-decoration-style:wavy;
+    text-decoration-color:var(--black);
+    text-decoration-thickness:from-font;
+    text-underline-offset:0.06em;
+    color:inherit;
+  }
+  .rainbow span:nth-child(5n+1){color:var(--c1)}
+  .rainbow span:nth-child(5n+2){color:var(--c2)}
+  .rainbow span:nth-child(5n+3){color:var(--c3)}
+  .rainbow span:nth-child(5n+4){color:var(--c4)}
+  .rainbow span:nth-child(5n+5){color:var(--c5)}
+
+  /* ---------- sections ---------- */
+
+  section{
+    border-top:1px solid var(--rule);
+    padding-top:1.75rem;
+    margin-bottom:4rem;
+  }
+  h2{
+    font-weight:500;
+    font-size:.8125rem;
+    color:var(--grey);
+    margin:0 0 1.75rem;
+  }
+
+  .work{list-style:none;margin:0;padding:0}
+  .work li{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:.35rem 2rem;
+    align-items:baseline;
+    padding:1rem 0;
+    border-bottom:1px solid var(--rule);
+  }
+  .work a{
+    font-family:var(--serif);
+    font-size:clamp(1.5rem,3.4vw,2.5rem);
+    line-height:1.12;
+    color:var(--black);
+    text-decoration:none;
+  }
+  .work a:hover,.work a:focus-visible{text-decoration:underline}
+  .work .meta{font-size:.75rem;color:var(--grey);white-space:nowrap}
+  .work p{
+    grid-column:1/-1;
+    max-width:58ch;
+    margin:.3rem 0 0;
+    font-size:.9375rem;
+    color:var(--grey);
+  }
+
+  .row{
+    display:flex;gap:1.5rem;align-items:baseline;
+    padding:.85rem 0;border-bottom:1px solid var(--rule);overflow:hidden;
+  }
+  .row .lab{flex:none;width:9.5rem;font-size:.6875rem;line-height:1.4;color:var(--grey)}
+  .row .smp{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .big-serif{font-family:var(--serif);font-size:clamp(2.4rem,6vw,4.75rem);line-height:1}
+  .mid-serif{font-family:var(--serif);font-size:clamp(1.5rem,3vw,2.25rem);line-height:1.1}
+  .sav{font-family:var(--savate);font-size:clamp(1.6rem,3.4vw,2.5rem);line-height:1.15}
+  .arch{font-size:1.0625rem}
+
+  .prose{max-width:62ch;margin:1.75rem 0 0;color:var(--grey);font-size:.9375rem}
+  .prose p{margin:0 0 .9rem}
+  .prose code{
+    font-family:ui-monospace,Menlo,Consolas,monospace;
+    font-size:.85em;background:rgba(0,0,0,.05);padding:.1em .35em;
+  }
+  .prose strong{color:var(--black);font-weight:500}
+
+  .palette{display:flex;flex-wrap:wrap}
+  .chip{flex:1 1 150px;min-width:150px}
+  .chip .bar{height:5.5rem}
+  .chip .txt{padding:.6rem .1rem 0}
+  .chip .nm{display:block;font-size:.8125rem;font-weight:500}
+  .chip .hx{display:block;font-size:.75rem;color:var(--grey)}
+
+  footer{border-top:1px solid var(--rule);padding-top:1.75rem;font-size:.9375rem;color:var(--grey)}
+  footer a{color:var(--black)}
+  a:focus-visible{outline:2px solid var(--c3);outline-offset:3px}
+
+  @media (max-width:640px){
+    .wrap{padding:2.25rem 1.15rem 4rem}
+    .work li{grid-template-columns:1fr}
+    .row{flex-direction:column;gap:.25rem}
+    .row .lab{width:auto}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="rd" aria-hidden="true"></canvas>
+
+<div class="wrap">
+
+  <p class="bio">
+    Vishnav is a biochemistry and computer science undergraduate at
+    Michigan. He measures binding thermodynamics in the
+    <a class="rainbow" href="#" aria-label="Morrissey lab">Morrissey lab</a>
+    and builds machine learning models on cardiac signal. He also helps run
+    <a class="rainbow" href="#" aria-label="Blueprints for Pangaea">Blueprints for Pangaea</a>,
+    which moves surplus medical supplies to where they are needed. Right
+    now he is writing up an ECG classifier and figuring out what
+    polyphosphate actually binds.
+  </p>
+
+  <section>
+    <h2>Selected work</h2>
+    <ul class="work">
+      <li>
+        <a href="#">Polyphosphate binding thermodynamics</a>
+        <span class="meta">ITC, 2026</span>
+        <p>Why the single-site model returns a stoichiometry that cannot be right, and what McGhee–von Hippel does about it.</p>
+      </li>
+      <li>
+        <a href="#">ECG classification on PTB-XL</a>
+        <span class="meta">PyTorch, 2026</span>
+        <p>A residual 1D CNN over 12-lead recordings. Mostly a writeup about patient-aware splitting and the four points of AUROC you gain by doing it wrong.</p>
+      </li>
+      <li>
+        <a href="#">Coagulation cascade model</a>
+        <span class="meta">In progress</span>
+        <p>Bench-measured constants fed into a kinetic model. The disagreements are the interesting part.</p>
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>The background</h2>
+    <div class="prose">
+      <p>
+        Gray–Scott reaction–diffusion: two chemicals, <em>u</em> and <em>v</em>.
+        <em>u</em> is fed in at rate <code>f</code>, <em>v</em> is removed at rate
+        <code>k</code>, and <em>v</em> catalyses its own production by consuming
+        <em>u</em>. Because <em>u</em> diffuses twice as fast as <em>v</em>,
+        the activator is trapped locally while the inhibitor spreads. That
+        asymmetry is the whole of Turing's 1952 argument, and it is
+        sufficient to produce the patterns you see.
+      </p>
+      <p>
+        Move the pointer to seed <em>v</em>. Each press cycles to the next
+        palette colour, and a long stroke cycles on its own every couple of
+        seconds. Colour is stored as a third field that diffuses with the
+        pattern, so a brick seed grows a brick colony and mixes only at the
+        borders with a neighbour.
+      </p>
+      <p>
+        <strong>Two things it respects.</strong> The loop pauses when the tab
+        is hidden, and under <code>prefers-reduced-motion</code> it computes
+        a few hundred steps once and renders a still. Parameters here are
+        <code>f = 0.0545, k = 0.062</code>, the coral regime.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Type</h2>
+    <div class="row"><span class="lab">Instrument Serif<br>for Editorial New</span><span class="smp big-serif">Thrombin generation</span></div>
+    <div class="row"><span class="lab">Savate<br>free, OFL</span><span class="smp sav">Isothermal titration calorimetry</span></div>
+    <div class="row"><span class="lab">Archivo<br>for Neue Haas Grotesk</span><span class="smp arch">Frankel Cardiovascular Center, 1234567890</span></div>
+  </section>
+
+  <section>
+    <h2>Palette</h2>
+    <div class="palette">
+      <div class="chip"><div class="bar" style="background:var(--c1)"></div><div class="txt"><span class="nm">Brick</span><span class="hx">#C7503A</span></div></div>
+      <div class="chip"><div class="bar" style="background:var(--c2)"></div><div class="txt"><span class="nm">Moss</span><span class="hx">#4A8B5F</span></div></div>
+      <div class="chip"><div class="bar" style="background:var(--c3)"></div><div class="txt"><span class="nm">Dusty blue</span><span class="hx">#5B6FB8</span></div></div>
+      <div class="chip"><div class="bar" style="background:var(--c4)"></div><div class="txt"><span class="nm">Ochre</span><span class="hx">#C9932E</span></div></div>
+      <div class="chip"><div class="bar" style="background:var(--c5)"></div><div class="txt"><span class="nm">Rose</span><span class="hx">#C4767E</span></div></div>
+    </div>
+  </section>
+
+  <footer>
+    Instrument Serif, Savate and Archivo, all free. Say hello —
+    <a href="#">vishnav@umich.edu</a>
+  </footer>
+
+</div>
+
+<script>
+  /* per-letter colouring, screen-reader safe */
+  document.querySelectorAll('.rainbow').forEach(function (el) {
+    var text = el.textContent.trim().replace(/\s+/g, ' ');
+    if (!el.getAttribute('aria-label')) el.setAttribute('aria-label', text);
+    var frag = document.createDocumentFragment();
+    for (var i = 0; i < text.length; i++) {
+      var s = document.createElement('span');
+      s.setAttribute('aria-hidden', 'true');
+      s.textContent = text[i] === ' ' ? '\u00A0' : text[i];
+      frag.appendChild(s);
+    }
+    el.textContent = '';
+    el.appendChild(frag);
+  });
+</script>
+
+<script>
+(function () {
+  var canvas = document.getElementById('rd');
+  var ctx = canvas.getContext('2d', { alpha: false });
+
+  var PALETTE = [
+    [199, 80, 58],   // brick
+    [74, 139, 95],   // moss
+    [91, 111, 184],  // dusty blue
+    [201, 147, 46],  // ochre
+    [196, 118, 126]  // rose
+  ];
+
+  // Gray–Scott constants (Pearson): u diffuses at 1, v at 0.5
+  var Du = 1.0, Dv = 0.5, F = 0.0545, K = 0.062;
+
+  var STRENGTH = 0.78;       // how far from white a fully-developed cell goes
+  var STEPS_PER_FRAME = 5;
+  var TARGET_CELLS = 52000;  // caps CPU on big screens
+  var COLOR_DIFFUSION = 0.06;
+
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var W, H, N, cell;
+  var u, v, u2, v2, cr, cg, cb, cr2, cg2, cb2;
+  var off, octx, img, data;
+  var colorIdx = 0, lastCycle = 0, pointerDown = false;
+  var running = false, raf = 0;
+
+  function alloc() {
+    var w = window.innerWidth, h = window.innerHeight;
+    cell = Math.max(5, Math.ceil(Math.sqrt((w * h) / TARGET_CELLS)));
+    W = Math.ceil(w / cell); H = Math.ceil(h / cell); N = W * H;
+    canvas.width = w; canvas.height = h;
+
+    u = new Float32Array(N).fill(1); v = new Float32Array(N);
+    u2 = new Float32Array(N); v2 = new Float32Array(N);
+    cr = new Float32Array(N).fill(255); cg = new Float32Array(N).fill(255); cb = new Float32Array(N).fill(255);
+    cr2 = new Float32Array(N); cg2 = new Float32Array(N); cb2 = new Float32Array(N);
+
+    off = document.createElement('canvas'); off.width = W; off.height = H;
+    octx = off.getContext('2d');
+    img = octx.createImageData(W, H); data = img.data;
+
+    // a few opening colonies, one per colour
+    for (var i = 0; i < 6; i++) {
+      seed(Math.random() * W, Math.random() * H, 3, PALETTE[i % PALETTE.length]);
+    }
+  }
+
+  function seed(cx, cy, r, col) {
+    var r2 = r * r;
+    var x0 = Math.max(1, Math.floor(cx - r)), x1 = Math.min(W - 2, Math.ceil(cx + r));
+    var y0 = Math.max(1, Math.floor(cy - r)), y1 = Math.min(H - 2, Math.ceil(cy + r));
+    for (var y = y0; y <= y1; y++) {
+      for (var x = x0; x <= x1; x++) {
+        var dx = x - cx, dy = y - cy;
+        if (dx * dx + dy * dy <= r2) {
+          var i = y * W + x;
+          v[i] = 1; u[i] = 0.5;
+          cr[i] = col[0]; cg[i] = col[1]; cb[i] = col[2];
+        }
+      }
+    }
+  }
+
+  function step(diffuseColor) {
+    var x, y, i, lu, lv, uvv;
+    for (y = 1; y < H - 1; y++) {
+      for (x = 1; x < W - 1; x++) {
+        i = y * W + x;
+        lu = -u[i]
+           + 0.2  * (u[i - 1] + u[i + 1] + u[i - W] + u[i + W])
+           + 0.05 * (u[i - W - 1] + u[i - W + 1] + u[i + W - 1] + u[i + W + 1]);
+        lv = -v[i]
+           + 0.2  * (v[i - 1] + v[i + 1] + v[i - W] + v[i + W])
+           + 0.05 * (v[i - W - 1] + v[i - W + 1] + v[i + W - 1] + v[i + W + 1]);
+        uvv = u[i] * v[i] * v[i];
+        var nu = u[i] + Du * lu - uvv + F * (1 - u[i]);
+        var nv = v[i] + Dv * lv + uvv - (K + F) * v[i];
+        u2[i] = nu < 0 ? 0 : nu > 1 ? 1 : nu;
+        v2[i] = nv < 0 ? 0 : nv > 1 ? 1 : nv;
+
+        if (diffuseColor) {
+          cr2[i] = cr[i] + COLOR_DIFFUSION * (-cr[i] + 0.25 * (cr[i - 1] + cr[i + 1] + cr[i - W] + cr[i + W]));
+          cg2[i] = cg[i] + COLOR_DIFFUSION * (-cg[i] + 0.25 * (cg[i - 1] + cg[i + 1] + cg[i - W] + cg[i + W]));
+          cb2[i] = cb[i] + COLOR_DIFFUSION * (-cb[i] + 0.25 * (cb[i - 1] + cb[i + 1] + cb[i - W] + cb[i + W]));
+        }
+      }
+    }
+    var t;
+    t = u; u = u2; u2 = t;
+    t = v; v = v2; v2 = t;
+    if (diffuseColor) {
+      t = cr; cr = cr2; cr2 = t;
+      t = cg; cg = cg2; cg2 = t;
+      t = cb; cb = cb2; cb2 = t;
+    }
+  }
+
+  function render() {
+    for (var i = 0, p = 0; i < N; i++, p += 4) {
+      var s = (v[i] - 0.12) / 0.20;
+      s = s < 0 ? 0 : s > 1 ? 1 : s;
+      s = s * s * (3 - 2 * s) * STRENGTH;
+      data[p]     = 255 + (cr[i] - 255) * s;
+      data[p + 1] = 255 + (cg[i] - 255) * s;
+      data[p + 2] = 255 + (cb[i] - 255) * s;
+      data[p + 3] = 255;
+    }
+    octx.putImageData(img, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(off, 0, 0, canvas.width, canvas.height);
+  }
+
+  var frame = 0, lastAmbient = 0;
+  function loop(now) {
+    if (!running) return;
+    for (var s = 0; s < STEPS_PER_FRAME; s++) step((frame++ & 3) === 0);
+
+    // keep it alive when nobody is touching it
+    if (now - lastAmbient > 5000) {
+      lastAmbient = now;
+      seed(Math.random() * W, Math.random() * H, 2.5, PALETTE[colorIdx]);
+      colorIdx = (colorIdx + 1) % PALETTE.length;
+    }
+    render();
+    raf = requestAnimationFrame(loop);
+  }
+
+  function start() {
+    if (running || reduce) return;
+    running = true; raf = requestAnimationFrame(loop);
+  }
+  function stop() { running = false; cancelAnimationFrame(raf); }
+
+  // ---------- interaction ----------
+  function pointerToCell(e) {
+    return { x: e.clientX / cell, y: e.clientY / cell };
+  }
+  window.addEventListener('pointermove', function (e) {
+    if (reduce) return;
+    var now = performance.now();
+    if (pointerDown && now - lastCycle > 1800) {
+      colorIdx = (colorIdx + 1) % PALETTE.length; lastCycle = now;
+    }
+    var c = pointerToCell(e);
+    seed(c.x, c.y, pointerDown ? 3.2 : 2.2, PALETTE[colorIdx]);
+  }, { passive: true });
+
+  window.addEventListener('pointerdown', function () {
+    if (reduce) return;
+    pointerDown = true;
+    colorIdx = (colorIdx + 1) % PALETTE.length;
+    lastCycle = performance.now();
+  }, { passive: true });
+  window.addEventListener('pointerup', function () { pointerDown = false; }, { passive: true });
+  window.addEventListener('pointercancel', function () { pointerDown = false; }, { passive: true });
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) stop(); else start();
+  });
+
+  var lastW = 0, lastH = 0, rt;
+  window.addEventListener('resize', function () {
+    clearTimeout(rt);
+    rt = setTimeout(function () {
+      var w = window.innerWidth, h = window.innerHeight;
+      // ignore mobile address-bar jitter
+      if (Math.abs(w - lastW) < 4 && Math.abs(h - lastH) < 160) return;
+      lastW = w; lastH = h;
+      alloc();
+      if (reduce) still();
+    }, 150);
+  });
+
+  function still() {
+    for (var i = 0; i < 700; i++) step((i & 3) === 0);
+    render();
+  }
+
+  lastW = window.innerWidth; lastH = window.innerHeight;
+  alloc();
+  if (reduce) still(); else start();
+})();
+</script>
+</body>
+</html>
