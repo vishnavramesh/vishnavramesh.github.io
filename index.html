@@ -343,7 +343,8 @@
       <p>
         Click anywhere to sow live cells — or let the pointer rest a
         moment and a colony grows under it. Hovering a project releases
-        its pattern into the margin. A newborn cell inherits the
+        its pattern into the margin, and scrolling stirs the dish as you
+        pass through. A newborn cell inherits the
         colour of its parents, so each seed grows a colony in its own
         palette colour and they argue at the borders. The little terminal
         in the corner takes any rule in <code>B&hellip;/S&hellip;</code>
@@ -618,6 +619,28 @@
   window.addEventListener('pointerup', function () { pointerDown = false; }, { passive: true });
   window.addEventListener('pointercancel', function () { pointerDown = false; }, { passive: true });
   document.addEventListener('pointerleave', function () { inPage = false; }, { passive: true });
+
+  // scrolling stirs the dish: every ~140px of travel sows a couple of
+  // colonies in the margins, so moving through the page leaves a wake
+  var lastSY = window.scrollY, scrollAcc = 0;
+  window.addEventListener('scroll', function () {
+    var dy = window.scrollY - lastSY;
+    lastSY = window.scrollY;
+    if (reduce || !bgOn) return;
+    scrollAcc += Math.abs(dy);
+    if (scrollAcc < 140) return;
+    scrollAcc = 0;
+    lastInput = performance.now();
+    var w = canvas.width, m = (w - Math.min(w, 1180)) / 2;
+    for (var s = 0; s < 2; s++) {
+      var leftSide = Math.random() < 0.5;
+      var x = m > 90
+        ? (leftSide ? 20 + Math.random() * (m - 40) : w - 20 - Math.random() * (m - 40))
+        : (leftSide ? 10 + Math.random() * 50 : w - 60 + Math.random() * 50);
+      seed(x / cell, Math.random() * canvas.height / cell, 2.2, colorIdx, 0.5);
+    }
+    if (Math.random() < 0.25) colorIdx = (colorIdx + 1) % PALETTE.length;
+  }, { passive: true });
 
   document.addEventListener('visibilitychange', function () {
     if (document.hidden) stop(); else start();
