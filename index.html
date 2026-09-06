@@ -96,6 +96,12 @@
     max-width:1180px;
     margin:0 auto;
     padding:3.5rem 2rem 6rem;
+    /* soft white veil so the text always reads, fading out at the edges */
+    background:linear-gradient(90deg,
+      rgba(255,255,255,0) 0%,
+      rgba(255,255,255,.72) 7%,
+      rgba(255,255,255,.72) 93%,
+      rgba(255,255,255,0) 100%);
   }
 
   /* ---------- the big paragraph ---------- */
@@ -397,9 +403,11 @@
     octx = off.getContext('2d');
     img = octx.createImageData(W, H); data = img.data;
 
-    // calm zone: dim the sim behind the text column, full strength in the margins
+    // calm zone: dim the sim behind the text column (plus a generous apron
+    // past its edges, so the glyphs and titles sit on near-white),
+    // full strength only out in the margins
     calm = new Float32Array(W);
-    var colW = Math.min(w, 1180), left = (w - colW) / 2, right = left + colW, fade = 140;
+    var colW = Math.min(w, 1180) + 340, left = (w - colW) / 2, right = left + colW, fade = 180;
     for (var cx = 0; cx < W; cx++) {
       var px = (cx + 0.5) * cell;
       var t = 0;
@@ -407,7 +415,7 @@
         t = Math.min((px - left) / fade, (right - px) / fade, 1);
         t = t * t * (3 - 2 * t);
       }
-      calm[cx] = 1 - t * 0.82;   // 0.18 of full strength behind the column
+      calm[cx] = 1 - t * 0.92;   // 8% of full strength behind the column
     }
 
     // a few opening colonies, one per colour
@@ -578,9 +586,8 @@
     var w = canvas.width, m = (w - Math.min(w, 1180)) / 2;
     for (var s = 0; s < 2; s++) {
       var leftSide = Math.random() < 0.5;
-      var x = m > 90
-        ? (leftSide ? 20 + Math.random() * (m - 40) : w - 20 - Math.random() * (m - 40))
-        : (leftSide ? 10 + Math.random() * 50 : w - 60 + Math.random() * 50);
+      var span = Math.max(50, m * 0.5);   // outer half of the margin, past the calm apron
+      var x = leftSide ? 10 + Math.random() * span : w - 10 - Math.random() * span;
       seed(x / cell, Math.random() * canvas.height / cell, 2.2, colorIdx, 0.5);
     }
     if (Math.random() < 0.25) colorIdx = (colorIdx + 1) % PALETTE.length;
@@ -799,8 +806,9 @@
 
     function spot(jitter) {
       var r = li.getBoundingClientRect();
-      var x = r.left > 120 ? r.left - 90 :
-              window.innerWidth - r.right > 120 ? r.right + 60 : r.left + 30;
+      // aim for the outer edge of the screen, past the widened calm apron
+      var x = r.left > 100 ? Math.max(24, r.left - r.left * 0.75) :
+              window.innerWidth - r.right > 100 ? window.innerWidth - 40 - (window.innerWidth - r.right) * 0.5 : r.left + 30;
       return {
         x: x + (Math.random() - 0.5) * jitter,
         y: r.top + r.height / 2 + (Math.random() - 0.5) * jitter
