@@ -336,7 +336,9 @@
         and — famously — universal computation.
       </p>
       <p>
-        Move the pointer to sow live cells. A newborn cell inherits the
+        Click anywhere to sow live cells — or let the pointer rest a
+        moment and a colony grows under it. Hovering a project releases
+        its pattern into the margin. A newborn cell inherits the
         colour of its parents, so each seed grows a colony in its own
         palette colour and they argue at the borders. The little terminal
         in the corner takes any rule in <code>B&hellip;/S&hellip;</code>
@@ -424,9 +426,12 @@
 
   var W, H, N, cell;
   var grid, next, col, colNext, heat;   // heat = fading trail intensity
+  var calm;                             // per-column dimming behind the text
   var off, octx, img, data;
   var colorIdx = 0, lastCycle = 0, pointerDown = false;
   var running = false, paused = false, bgOn = true, raf = 0, lastGen = 0, lastAmbient = 0;
+  var lastInput = performance.now();    // idle → the dish settles
+  var lastX = -1, lastY = -1, lastMoveT = 0, lastDwell = 0, overTerm = false, inPage = false;
 
   function alloc() {
     var w = window.innerWidth, h = window.innerHeight;
@@ -441,6 +446,19 @@
     off = document.createElement('canvas'); off.width = W; off.height = H;
     octx = off.getContext('2d');
     img = octx.createImageData(W, H); data = img.data;
+
+    // calm zone: dim the sim behind the text column, full strength in the margins
+    calm = new Float32Array(W);
+    var colW = Math.min(w, 1180), left = (w - colW) / 2, right = left + colW, fade = 140;
+    for (var cx = 0; cx < W; cx++) {
+      var px = (cx + 0.5) * cell;
+      var t = 0;
+      if (px > left && px < right) {
+        t = Math.min((px - left) / fade, (right - px) / fade, 1);
+        t = t * t * (3 - 2 * t);
+      }
+      calm[cx] = 1 - t * 0.82;   // 0.18 of full strength behind the column
+    }
 
     // a few opening colonies, one per colour
     for (var i = 0; i < 6; i++) {
@@ -514,9 +532,10 @@
   }
 
   function render() {
-    for (var i = 0, p = 0; i < N; i++, p += 4) {
+    for (var i = 0, p = 0, x = 0; i < N; i++, p += 4, x++) {
+      if (x === W) x = 0;
       var s = heat[i];
-      s = (s < 0.04 ? 0 : s) * STRENGTH;
+      s = (s < 0.04 ? 0 : s) * STRENGTH * calm[x];
       var c = PALETTE[col[i]];
       data[p]     = 255 + (c[0] - 255) * s;
       data[p + 1] = 255 + (c[1] - 255) * s;
@@ -530,12 +549,21 @@
 
   function loop(now) {
     if (!running) return;
+    // hover-dwell: pointer resting in one spot sows a small colony
+    if (inPage && !overTerm && !reduce && bgOn && lastX >= 0 &&
+        now - lastMoveT > 650 && now - lastDwell > 900) {
+      lastDwell = now;
+      seed(lastX / cell, lastY / cell, 2.6, colorIdx, 0.55);
+      lastInput = now;
+    }
+
     if (now - lastGen >= GEN_MS) {
       lastGen = now;
       if (!paused) {
         step();
-        // keep it alive when nobody is touching it
-        if (now - lastAmbient > 7000) {
+        // ambient reseeding only while someone is actually around;
+        // after ~30s idle the dish settles into still lifes and gliders
+        if (now - lastAmbient > 7000 && now - lastInput < 30000) {
           lastAmbient = now;
           seed(Math.random() * W, Math.random() * H, 4, colorIdx, 0.55);
           colorIdx = (colorIdx + 1) % PALETTE.length;
@@ -558,23 +586,33 @@
   }
 
   // ---------- pointer interaction ----------
+  // moving the pointer sows nothing; cells appear on click, while dragging,
+  // or when the pointer rests in one place (dwell, handled in loop)
   window.addEventListener('pointermove', function (e) {
-    if (reduce || !bgOn) return;
     var now = performance.now();
-    if (pointerDown && now - lastCycle > 1800) {
-      colorIdx = (colorIdx + 1) % PALETTE.length; lastCycle = now;
+    inPage = true;
+    overTerm = !!(e.target.closest && e.target.closest('#term'));
+    var moved = Math.abs(e.clientX - lastX) > 24 || Math.abs(e.clientY - lastY) > 24;
+    if (moved) { lastX = e.clientX; lastY = e.clientY; lastMoveT = now; }
+    if (reduce || !bgOn) return;
+    if (pointerDown) {
+      if (now - lastCycle > 1800) { colorIdx = (colorIdx + 1) % PALETTE.length; lastCycle = now; }
+      seed(e.clientX / cell, e.clientY / cell, 3.2, colorIdx, 0.5);
+      lastInput = now;
     }
-    seed(e.clientX / cell, e.clientY / cell, pointerDown ? 3.5 : 2.2, colorIdx, 0.5);
   }, { passive: true });
 
   window.addEventListener('pointerdown', function (e) {
-    if (reduce || e.target.closest && e.target.closest('#term')) return;
+    if (e.target.closest && e.target.closest('#term')) return;
     pointerDown = true;
+    lastInput = lastCycle = performance.now();
+    if (reduce || !bgOn) return;
     colorIdx = (colorIdx + 1) % PALETTE.length;
-    lastCycle = performance.now();
+    seed(e.clientX / cell, e.clientY / cell, 4, colorIdx, 0.6);
   }, { passive: true });
   window.addEventListener('pointerup', function () { pointerDown = false; }, { passive: true });
   window.addEventListener('pointercancel', function () { pointerDown = false; }, { passive: true });
+  document.addEventListener('pointerleave', function () { inPage = false; }, { passive: true });
 
   document.addEventListener('visibilitychange', function () {
     if (document.hidden) stop(); else start();
@@ -639,6 +677,7 @@
     var parts = input.trim().split(/\s+/);
     var cmd = (parts[0] || '').toLowerCase();
     if (!cmd) return;
+    lastInput = performance.now();
     log('> ' + input, 'in');
 
     if (cmd === 'help') {
@@ -657,8 +696,8 @@
       log('eight neighbours. dead + exactly 3 alive → born; alive');
       log('with 2 or 3 → survives; otherwise it dies. B3/S23.');
       log('that rule alone gives gliders, guns, and a computer.');
-      log('move your pointer to sow cells — newborns inherit their');
-      log('parents’ colour, so colonies keep their palette shade.');
+      log('click (or rest your pointer) to sow cells — newborns');
+      log('inherit their parents’ colour, so colonies keep their shade.');
       log('try: rule highlife · rule maze · random .4 · speed 40');
       return;
     }
@@ -718,6 +757,22 @@
   tbar.addEventListener('click', function () { term.classList.toggle('min'); });
   log('conway’s game of life — type about, or help for commands');
 
+  // let the project rows stamp their patterns into the dish
+  window.lifeBG = {
+    stamp: function (cells, ci, clientX, clientY) {
+      if (reduce || !bgOn) return;
+      var cx = Math.round(clientX / cell), cy = Math.round(clientY / cell);
+      for (var k = 0; k < cells.length; k++) {
+        var x = cx + cells[k][0], y = cy + cells[k][1];
+        if (x > 0 && x < W - 1 && y > 0 && y < H - 1) {
+          var i = y * W + x;
+          grid[i] = 1; col[i] = ci; heat[i] = 1;
+        }
+      }
+      lastInput = performance.now();
+    }
+  };
+
   lastW = window.innerWidth; lastH = window.innerHeight;
   alloc();
   if (reduce) still(); else start();
@@ -763,6 +818,42 @@
     plant(g);
     draw(g);
     glyphs.push(g);
+
+    // hovering a project row releases its pattern into the margin;
+    // clicking the glyph fires a salvo of three
+    var ci = +cv.dataset.color || 0;
+    var li = cv.closest('li');
+    var lastStamp = 0;
+
+    function spot(jitter) {
+      var r = li.getBoundingClientRect();
+      var x = r.left > 120 ? r.left - 90 :
+              window.innerWidth - r.right > 120 ? r.right + 60 : r.left + 30;
+      return {
+        x: x + (Math.random() - 0.5) * jitter,
+        y: r.top + r.height / 2 + (Math.random() - 0.5) * jitter
+      };
+    }
+    function release() {
+      if (!window.lifeBG) return;
+      var p = spot(60);
+      window.lifeBG.stamp(spec.cells, ci, p.x, p.y);
+    }
+
+    li.addEventListener('pointerenter', function () {
+      var now = performance.now();
+      if (now - lastStamp < 1500) return;
+      lastStamp = now;
+      release();
+    });
+    cv.style.cursor = 'pointer';
+    cv.title = 'release into the background';
+    cv.addEventListener('click', function (e) {
+      e.stopPropagation();
+      release();
+      setTimeout(release, 220);
+      setTimeout(release, 440);
+    });
   });
 
   function plant(g) {
