@@ -176,6 +176,30 @@
   }
   .work a:hover,.work a:focus-visible{text-decoration:underline}
   .work .meta{font-size:.75rem;color:var(--grey);white-space:nowrap}
+  .work .meta a.gh{
+    font-family:var(--sans);font-size:inherit;line-height:inherit;
+    color:var(--grey);text-decoration:underline;text-underline-offset:2px;
+  }
+  .work .meta a.gh:hover{color:var(--black)}
+
+  /* ---------- github hover preview card ---------- */
+  #ghcard{
+    position:fixed;z-index:3;
+    width:16rem;
+    background:rgba(255,255,255,.97);
+    border:1px solid var(--black);
+    padding:.7rem .8rem;
+    font-size:.75rem;line-height:1.5;color:var(--grey);
+    pointer-events:none;
+    opacity:0;transition:opacity .12s ease;
+  }
+  #ghcard.show{opacity:1}
+  #ghcard b{display:block;font-weight:500;color:var(--black);font-size:.8125rem}
+  #ghcard .desc{margin:.15rem 0 .4rem}
+  #ghcard .row{display:flex;gap:.9rem}
+  #ghcard .langbar{display:flex;height:4px;margin-top:.5rem;background:var(--rule)}
+  #ghcard .langbar i{height:100%}
+  @media (hover:none){#ghcard{display:none}}
   .work p{
     grid-column:2/-1;
     max-width:58ch;
@@ -258,35 +282,35 @@
   <section>
     <h2>Selected work</h2>
     <ul class="work">
-      <li>
+      <li data-repo="vishnavramesh/Blueprints_DB">
         <canvas class="glyph" data-pattern="rpentomino" data-color="0" aria-hidden="true"></canvas>
-        <a href="#">Polyphosphate binding thermodynamics</a>
-        <span class="meta">ITC · Morrissey Lab, 2026</span>
-        <p>Lattice-binding models for anti-stroke drug design.</p>
+        <a href="projects/blueprints-db.html" target="_blank" rel="noopener">Blueprints Inventory Database</a>
+        <span class="meta">PostgreSQL + C++ (Drogon) · 2026 – present · <a class="gh" href="https://github.com/vishnavramesh/Blueprints_DB" target="_blank" rel="noopener">GitHub ↗</a></span>
+        <p>Replaced a spreadsheet inventory with a BCNF PostgreSQL schema and a multithreaded C++ service — ~1.2s → ~40ms, live at 14 university chapters.</p>
       </li>
-      <li>
+      <li data-repo="MLNeurosurg/Prima">
         <canvas class="glyph" data-pattern="glider" data-color="2" aria-hidden="true"></canvas>
-        <a href="#">Prima — longitudinal disease progression</a>
-        <span class="meta">PyTorch · MLNeurosurg Lab, 2026</span>
-        <p>Teaching a brain-MRI vision–language model to see change across scans.</p>
+        <a href="projects/prima.html" target="_blank" rel="noopener">Prima — longitudinal disease progression</a>
+        <span class="meta">PyTorch · MLNeurosurg Lab, 2026 · <a class="gh" href="https://github.com/MLNeurosurg/Prima" target="_blank" rel="noopener">GitHub ↗</a></span>
+        <p>Extended a brain-MRI vision–language model with a longitudinal module that sees change across sequential patient scans.</p>
       </li>
       <li>
         <canvas class="glyph" data-pattern="pulsar" data-color="4" aria-hidden="true"></canvas>
-        <a href="#">ECG classification on PTB-XL</a>
-        <span class="meta">PyTorch, 2026</span>
-        <p>A residual 1D CNN over 12-lead recordings, split the right way.</p>
+        <a href="projects/binding-model.html" target="_blank" rel="noopener">McGhee–von Hippel binding model</a>
+        <span class="meta">NumPy/SciPy · Morrissey Lab, 2026 · <a class="gh" href="https://tf7.org/" target="_blank" rel="noopener">Lab ↗</a></span>
+        <p>A probabilistic lattice-binding model of protein–polymer interactions for anti-stroke drug design — screening 10+ coagulant candidates before the wet lab.</p>
       </li>
-      <li>
+      <li data-repo="vishnavramesh/MedicalSuppliesTracker">
         <canvas class="glyph" data-pattern="lwss" data-color="1" aria-hidden="true"></canvas>
-        <a href="#">Blueprints Supply Desk</a>
-        <span class="meta">FastAPI + React, 2026</span>
-        <p>A supply-request portal for humanitarian medical logistics.</p>
+        <a href="projects/external-dashboard.html" target="_blank" rel="noopener">Blueprints External Dashboard</a>
+        <span class="meta">FastAPI + React · 2026 · <a class="gh" href="https://github.com/vishnavramesh/MedicalSuppliesTracker" target="_blank" rel="noopener">GitHub ↗</a></span>
+        <p>A supply-request portal used by 10+ partner organizations, with Gemini-powered shipment logging and automated email notifications.</p>
       </li>
-      <li>
+      <li data-repo="vishnavramesh/Super_Sticky_Chess">
         <canvas class="glyph" data-pattern="beacon" data-color="3" aria-hidden="true"></canvas>
-        <a href="#">Coagulation cascade model</a>
-        <span class="meta">In progress</span>
-        <p>Bench-measured constants fed into a kinetic model.</p>
+        <a href="https://github.com/vishnavramesh/Super_Sticky_Chess" target="_blank" rel="noopener">Super Sticky Chess</a>
+        <span class="meta">Just for fun · <a class="gh" href="https://github.com/vishnavramesh/Super_Sticky_Chess" target="_blank" rel="noopener">GitHub ↗</a></span>
+        <p>Chess, but stickier. From an avid 1600-ELO aficionado.</p>
       </li>
     </ul>
   </section>
@@ -299,11 +323,11 @@
         <span class="when">2025 – 2028</span>
       </li>
       <li>
-        <span class="org"><a href="https://tf7.org/">Morrissey Lab</a> <em>— SURF fellow @ Frankel Cardiovascular Center</em></span>
+        <span class="org"><a href="https://tf7.org/" target="_blank" rel="noopener">Morrissey Lab</a> <em>— SURF fellow @ Frankel Cardiovascular Center</em></span>
         <span class="when">Summer 2026</span>
       </li>
       <li>
-        <span class="org"><a href="https://www.blueprintsforpangaea.org/">Blueprints for Pangaea</a> <em>— technology &amp; financial lead</em></span>
+        <span class="org"><a href="https://www.blueprintsforpangaea.org/" target="_blank" rel="noopener">Blueprints for Pangaea</a> <em>— technology &amp; financial lead</em></span>
         <span class="when">2026 – present</span>
       </li>
       <li>
@@ -341,8 +365,8 @@
   <footer>
     Set in Instrument Serif and Archivo. Say hello —
     <a href="mailto:vishnavr@umich.edu">vishnavr@umich.edu</a> ·
-    <a href="https://github.com/VishnavRamesh">GitHub</a> ·
-    <a href="https://linkedin.com/in/vishnavramesh">LinkedIn</a>
+    <a href="https://github.com/VishnavRamesh" target="_blank" rel="noopener">GitHub</a> ·
+    <a href="https://linkedin.com/in/vishnavramesh" target="_blank" rel="noopener">LinkedIn</a>
   </footer>
 
 </div>
@@ -889,6 +913,86 @@
       glyphs.forEach(function (g) { step(g); draw(g); });
     }, 420);
   }
+})();
+</script>
+
+<script>
+/* github hover preview cards: repo stats fetched once per repo, shown on row hover */
+(function () {
+  if (window.matchMedia('(hover: none)').matches) return;
+
+  var LANG_COLORS = {
+    'C++': '#f34b7d', Python: '#3572A5', JavaScript: '#f1e05a',
+    TypeScript: '#3178c6', HTML: '#e34c26', CSS: '#563d7c',
+    'Jupyter Notebook': '#DA5B0B', Shell: '#89e051', PLpgSQL: '#336790'
+  };
+
+  var card = document.createElement('div');
+  card.id = 'ghcard';
+  card.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(card);
+
+  var cache = {}; // repo -> html string (or promise sentinel)
+
+  function fill(repo, data) {
+    var langs = data.langs || {};
+    var total = 0, k;
+    for (k in langs) total += langs[k];
+    var bar = '';
+    if (total) {
+      for (k in langs) {
+        bar += '<i style="width:' + (100 * langs[k] / total).toFixed(1) +
+               '%;background:' + (LANG_COLORS[k] || '#999') + '" title="' + k + '"></i>';
+      }
+    }
+    var langNames = Object.keys(langs).slice(0, 3).join(' · ');
+    cache[repo] =
+      '<b>' + repo + '</b>' +
+      '<div class="desc">' + (data.description || '') + '</div>' +
+      '<div class="row"><span>★ ' + data.stargazers_count + '</span>' +
+      '<span>⑂ ' + data.forks_count + '</span>' +
+      '<span>' + langNames + '</span></div>' +
+      (bar ? '<div class="langbar">' + bar + '</div>' : '');
+  }
+
+  function load(repo) {
+    if (cache[repo]) return;
+    cache[repo] = '<b>' + repo + '</b><div class="desc">loading…</div>';
+    fetch('https://api.github.com/repos/' + repo)
+      .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .then(function (data) {
+        return fetch('https://api.github.com/repos/' + repo + '/languages')
+          .then(function (r) { return r.ok ? r.json() : {}; })
+          .then(function (langs) { data.langs = langs; fill(repo, data); refresh(repo); });
+      })
+      .catch(function () {
+        cache[repo] = '<b>' + repo + '</b><div class="desc">view on github ↗</div>';
+        refresh(repo);
+      });
+  }
+
+  var currentRepo = null;
+  function refresh(repo) {
+    if (repo === currentRepo) card.innerHTML = cache[repo];
+  }
+
+  document.querySelectorAll('.work li[data-repo]').forEach(function (li) {
+    var repo = li.dataset.repo;
+    li.addEventListener('pointerenter', function () {
+      load(repo);
+      currentRepo = repo;
+      card.innerHTML = cache[repo];
+      var r = li.getBoundingClientRect();
+      var x = Math.min(r.right - 260, window.innerWidth - 280);
+      card.style.left = Math.max(12, x) + 'px';
+      card.style.top = Math.min(r.top + 8, window.innerHeight - 140) + 'px';
+      card.classList.add('show');
+    });
+    li.addEventListener('pointerleave', function () {
+      currentRepo = null;
+      card.classList.remove('show');
+    });
+  });
 })();
 </script>
 </body>
