@@ -58,8 +58,8 @@ li{margin-bottom:.4rem}
 }
 .stats div{background:var(--white);padding:1rem}
 .stats b{
-  display:block;font-family:var(--serif);font-weight:400;
-  font-size:1.9rem;line-height:1.1;color:var(--accent);
+  display:block;font-family:var(--sans);font-weight:600;
+  font-size:1.6rem;line-height:1.2;color:var(--black);
 }
 .stats span{font-size:.75rem;color:var(--grey)}
 figure{margin:1.5rem 0}
