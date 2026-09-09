@@ -7,9 +7,8 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50' y='50' font-size='88' text-anchor='middle' dominant-baseline='central'%3E%F0%9F%91%BE%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Archivo:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="case.css">
-<style>:root{--accent:var(--c1)}</style>
 </head>
 <body>
 <div class="wrap">
@@ -57,6 +56,30 @@
     <img src="assets/schema.png" alt="Entity-relationship diagram of the 12-table BCNF schema" loading="lazy">
     <figcaption>The full entity-relationship diagram — category, manufacturer, supply, box, shipment, and ledger tables.</figcaption>
   </figure>
+
+  <h2>The C++ service</h2>
+  <p>One native binary (<code>b4p-service</code>, ~1,000 lines of C++20 on Drogon +
+  libpqxx) replaces the Python monitor script and puts an HTTP API in front of the
+  database. It does two jobs in a single process: serve the inventory as JSON
+  (<code>/health</code>, <code>/api/supplies</code>, <code>/requests</code>,
+  <code>/inventory/availability</code>), and every five minutes pull the live dashboard
+  feeds, insert unseen rows in one transaction, and run six SQL integrity checks.</p>
+  <ul>
+    <li><strong>Drop-in API compatibility:</strong> <code>/requests</code> is
+        byte-identical to the production Render backend (verified by diffing normalized
+        output against live data), so the dashboard frontend can be repointed with zero
+        changes. The availability rule was reverse-engineered from production and
+        verified against all 1,384 live rows.</li>
+    <li><strong>Idempotent sync:</strong> feed rows are fingerprinted with the same
+        <code>md5(json.dumps(row, sort_keys=True))</code> hash the Python pipeline
+        wrote — reproduced byte-for-byte in C++, down to Python's separators and
+        <code>\uXXXX</code> escaping — so thousands of historical rows are recognized
+        instead of re-inserted.</li>
+    <li><strong>Minimal concurrency surface:</strong> request handlers run on Drogon's
+        worker threads while the sync rides the main event loop; all database access
+        funnels through one mutex-guarded transaction wrapper, and every query is a
+        named prepared statement — no string-built SQL anywhere.</li>
+  </ul>
 
   <h2>What's inside, right now</h2>
   <p>Live numbers from the production database:</p>
