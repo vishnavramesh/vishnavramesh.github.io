@@ -25,7 +25,8 @@
   <div class="stats">
     <div><b>32×</b><span>faster — ~1.2s → ~40ms backend latency</span></div>
     <div><b>14</b><span>university chapters live nationwide</span></div>
-    <div><b>BCNF</b><span>fully normalized schema</span></div>
+    <div><b>20,134</b><span>units of supply across 1,384 tracked line items</span></div>
+    <div><b>BCNF</b><span>fully normalized schema, 12 tables</span></div>
   </div>
 
   <h2>The problem</h2>
@@ -47,14 +48,42 @@
         and unverified requests are flagged before they hit the ledger.</li>
   </ul>
 
+  <h2>The schema</h2>
+  <p>Twelve tables in BCNF: supplies are canonical (manufacturer aliases fold messy
+  vendor names into one row), physical stock lives in <code>inventory_item</code> →
+  <code>box</code> → pallet, and every movement writes an immutable row to the
+  trigger-maintained <code>inventory_transaction</code> ledger.</p>
+  <figure>
+    <img src="assets/schema.png" alt="Entity-relationship diagram of the 12-table BCNF schema" loading="lazy">
+    <figcaption>The full entity-relationship diagram — category, manufacturer, supply, box, shipment, and ledger tables.</figcaption>
+  </figure>
+
+  <h2>What's inside, right now</h2>
+  <p>Live numbers from the production database:</p>
+  <div class="stats">
+    <div><b>1,384</b><span>inventory line items (20,134 units)</span></div>
+    <div><b>56</b><span>boxes across 6 box types (ST/N, TC/RC, PH/PPE, ER…)</span></div>
+    <div><b>10</b><span>shipments to 8 partner organizations</span></div>
+    <div><b>119</b><span>expired items auto-caught (+255 flagged) by integrity checks</span></div>
+  </div>
+
+  <h2>Live analytics</h2>
+  <p>The database feeds Metabase dashboards for HQ — total stock, intake over time, and
+  expiry-year distribution straight off the SQL:</p>
+  <figure>
+    <img src="assets/metabase.png" alt="Metabase dashboard showing 1,384 total inventory items and expiry-date distributions" loading="lazy">
+    <figcaption>Inventory analytics: intake by weekday, month, and quarter, plus stock by expiration year.</figcaption>
+  </figure>
+
   <h2>Results</h2>
   <p>Backend latency fell from roughly <strong>1.2 seconds to ~40 milliseconds</strong>,
   and the system is rolling out nationwide to <strong>14 university chapters</strong>,
   replacing the spreadsheet workflow entirely.</p>
 
   <h2>See it respond</h2>
-  <p>Live queries against the real database — fuzzy trigram search, a cross-table stock
-  report, and an expiry integrity check, each answering in single-digit-to-30ms:</p>
+  <p>Live queries against the real database — fuzzy search over 1,211 supply names via
+  the <code>supply_name_trgm</code> GIN index (33ms), a stock-and-expiry report joined
+  across the normalized schema (5ms), and the expired-items integrity check (0.4ms):</p>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/asciinema-player@3.10.0/dist/bundle/asciinema-player.min.css">
   <div id="cast" style="border:1px solid var(--rule)"></div>
   <script src="https://cdn.jsdelivr.net/npm/asciinema-player@3.10.0/dist/bundle/asciinema-player.min.js"></script>
