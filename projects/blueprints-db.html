@@ -47,15 +47,32 @@
         and unverified requests are flagged before they hit the ledger.</li>
   </ul>
 
-  <h2>The schema</h2>
+  <h2>The schema &amp; the data</h2>
   <p>Twelve tables in BCNF: supplies are canonical (manufacturer aliases fold messy
   vendor names into one row), physical stock lives in <code>inventory_item</code> →
   <code>box</code> → pallet, and every movement writes an immutable row to the
-  trigger-maintained <code>inventory_transaction</code> ledger.</p>
+  trigger-maintained <code>inventory_transaction</code> ledger — current quantities are
+  derived from the ledger, never hand-edited. Reads lean on SQL views
+  (<code>v_inventory</code>, <code>v_kpis</code>) so joins live in the schema, not in
+  application code.</p>
   <figure>
     <img src="assets/schema.png" alt="Entity-relationship diagram of the 12-table BCNF schema" loading="lazy">
     <figcaption>The full entity-relationship diagram — category, manufacturer, supply, box, shipment, and ledger tables.</figcaption>
   </figure>
+  <p>Live numbers from the production database:</p>
+  <div class="stats">
+    <div><b>1,384</b><span>inventory line items (20,134 units)</span></div>
+    <div><b>56</b><span>boxes across 6 box types (ST/N, TC/RC, PH/PPE, ER…)</span></div>
+    <div><b>10</b><span>shipments to 8 partner organizations</span></div>
+    <div><b>119</b><span>expired items auto-caught (+255 flagged) by integrity checks</span></div>
+  </div>
+
+  <h2>Latency</h2>
+  <p>Backend latency fell from roughly <strong>1.2 seconds to ~40 milliseconds</strong>
+  against the spreadsheet-backed workflow. Fuzzy search over 1,211 supply names runs in
+  <strong>33ms</strong> via the <code>supply_name_trgm</code> GIN index, a
+  stock-and-expiry report joined across the normalized schema in <strong>5ms</strong>,
+  and the expired-items integrity check in <strong>0.4ms</strong>.</p>
 
   <h2>The C++ service</h2>
   <p>One native binary (<code>b4p-service</code>, ~1,000 lines of C++20 on Drogon +
@@ -64,6 +81,38 @@
   (<code>/health</code>, <code>/api/supplies</code>, <code>/requests</code>,
   <code>/inventory/availability</code>), and every five minutes pull the live dashboard
   feeds, insert unseen rows in one transaction, and run six SQL integrity checks.</p>
+  <p>How it links up: the service sits between the live Render dashboard feeds and
+  local Postgres. The sync side pulls from the feeds and writes to the database; the
+  serve side reads from the same database and re-exposes it in the dashboard's own
+  format — so the frontend, Metabase, and plain <code>curl</code> can all point at one
+  process.</p>
+<pre><code>                      ┌──────────────────────────────────────────────┐
+ Render backend       │  b4p-service (one process)                   │
+ (live feeds)         │                                              │
+/api/supplies ──────► │  sync.cpp ── every 300 s ──┐                 │
+/requests     ──────► │  (drogon::HttpClient,      │  one txn        │
+                      │   async, main loop)        ▼                 │
+                      │                        db.cpp ────────► Postgres (b4p)
+ dashboard / curl     │                            ▲                 │
+/health       ──────► │  main.cpp handlers ────────┘                 │
+/api/supplies ──────► │  (drogon worker threads,   normalize.cpp    │
+/requests     ──────► │   prepared statements)     (pure functions)  │
+/inventory/availability ─►                                           │
+                      └──────────────────────────────────────────────┘</code></pre>
+  <p>The structure keeps each concern in one file:</p>
+  <ul>
+    <li><code>main.cpp</code> — wiring: HTTP route handlers, sync scheduling, config.</li>
+    <li><code>db.cpp</code> — owns the Postgres connection; every query is a named
+        prepared statement registered in one place, and all access goes through a
+        mutex-guarded transaction wrapper that commits on return and rolls back on
+        throw.</li>
+    <li><code>normalize.cpp</code> — the pure data-cleaning rules ported from the
+        Python loader (category/manufacturer canonicalization, box-label and date
+        parsing), pinned by a unit-test suite of real-world feed garbage like
+        <code>"1 (full box)"</code> and unicode hyphens.</li>
+    <li><code>sync.cpp</code> — the monitor port: async feed fetch, row fingerprinting,
+        the one-transaction sync, and the consistency checks.</li>
+  </ul>
   <ul>
     <li><strong>Drop-in API compatibility:</strong> <code>/requests</code> is
         byte-identical to the production Render backend (verified by diffing normalized
@@ -74,21 +123,13 @@
         <code>md5(json.dumps(row, sort_keys=True))</code> hash the Python pipeline
         wrote — reproduced byte-for-byte in C++, down to Python's separators and
         <code>\uXXXX</code> escaping — so thousands of historical rows are recognized
-        instead of re-inserted.</li>
+        instead of re-inserted. On its first run against production, the service
+        recognized all 1,384 existing rows and inserted zero.</li>
     <li><strong>Minimal concurrency surface:</strong> request handlers run on Drogon's
-        worker threads while the sync rides the main event loop; all database access
-        funnels through one mutex-guarded transaction wrapper, and every query is a
-        named prepared statement — no string-built SQL anywhere.</li>
+        worker threads while the sync rides the main event loop with no extra threads;
+        the one mutex inside <code>db.cpp</code> is the only synchronization in the
+        service.</li>
   </ul>
-
-  <h2>What's inside, right now</h2>
-  <p>Live numbers from the production database:</p>
-  <div class="stats">
-    <div><b>1,384</b><span>inventory line items (20,134 units)</span></div>
-    <div><b>56</b><span>boxes across 6 box types (ST/N, TC/RC, PH/PPE, ER…)</span></div>
-    <div><b>10</b><span>shipments to 8 partner organizations</span></div>
-    <div><b>119</b><span>expired items auto-caught (+255 flagged) by integrity checks</span></div>
-  </div>
 
   <h2>Live analytics</h2>
   <p>The database feeds Metabase dashboards for HQ — total stock, intake over time, and
@@ -97,16 +138,12 @@
     <img src="assets/metabase.png" alt="Metabase dashboard showing 1,384 total inventory items and expiry-date distributions" loading="lazy">
     <figcaption>Inventory analytics: intake by weekday, month, and quarter, plus stock by expiration year.</figcaption>
   </figure>
-
-  <h2>Results</h2>
-  <p>Backend latency fell from roughly <strong>1.2 seconds to ~40 milliseconds</strong>,
-  and the system is rolling out nationwide to <strong>14 university chapters</strong>,
+  <p>The system is rolling out nationwide to <strong>14 university chapters</strong>,
   replacing the spreadsheet workflow entirely.</p>
 
   <h2>See it respond</h2>
-  <p>Live queries against the real database — fuzzy search over 1,211 supply names via
-  the <code>supply_name_trgm</code> GIN index (33ms), a stock-and-expiry report joined
-  across the normalized schema (5ms), and the expired-items integrity check (0.4ms):</p>
+  <p>Live queries against the real database — the fuzzy search, stock-and-expiry
+  report, and integrity check timed above, running for real:</p>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/asciinema-player@3.10.0/dist/bundle/asciinema-player.min.css">
   <div id="cast" style="border:1px solid var(--rule)"></div>
   <script src="https://cdn.jsdelivr.net/npm/asciinema-player@3.10.0/dist/bundle/asciinema-player.min.js"></script>
