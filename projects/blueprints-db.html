@@ -74,6 +74,19 @@
   stock-and-expiry report joined across the normalized schema in <strong>5ms</strong>,
   and the expired-items integrity check in <strong>0.4ms</strong>.</p>
 
+  <h2>See it respond</h2>
+  <p>Live queries against the real database — the fuzzy search, stock-and-expiry
+  report, and integrity check timed above, running for real:</p>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/asciinema-player@3.10.0/dist/bundle/asciinema-player.min.css">
+  <div id="cast" style="border:1px solid var(--rule)"></div>
+  <script src="https://cdn.jsdelivr.net/npm/asciinema-player@3.10.0/dist/bundle/asciinema-player.min.js"></script>
+  <script>
+    AsciinemaPlayer.create('blueprints-db.cast', document.getElementById('cast'), {
+      cols: 104, rows: 32, autoPlay: true, loop: true, controls: true,
+      theme: 'asciinema', terminalFontFamily: 'ui-monospace, Menlo, Consolas, monospace'
+    });
+  </script>
+
   <h2>The C++ service</h2>
   <p>One native binary (<code>b4p-service</code>, ~1,000 lines of C++20 on Drogon +
   libpqxx) replaces the Python monitor script and puts an HTTP API in front of the
@@ -140,19 +153,6 @@
   </figure>
   <p>The system is rolling out nationwide to <strong>14 university chapters</strong>,
   replacing the spreadsheet workflow entirely.</p>
-
-  <h2>See it respond</h2>
-  <p>Live queries against the real database — the fuzzy search, stock-and-expiry
-  report, and integrity check timed above, running for real:</p>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/asciinema-player@3.10.0/dist/bundle/asciinema-player.min.css">
-  <div id="cast" style="border:1px solid var(--rule)"></div>
-  <script src="https://cdn.jsdelivr.net/npm/asciinema-player@3.10.0/dist/bundle/asciinema-player.min.js"></script>
-  <script>
-    AsciinemaPlayer.create('blueprints-db.cast', document.getElementById('cast'), {
-      cols: 104, rows: 32, autoPlay: true, loop: true, controls: true,
-      theme: 'asciinema', terminalFontFamily: 'ui-monospace, Menlo, Consolas, monospace'
-    });
-  </script>
 
   <footer>
     <a href="../index.html">← back</a> ·
